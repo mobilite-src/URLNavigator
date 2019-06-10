@@ -2,6 +2,7 @@
 import UIKit
 
 public protocol NavigatorDelegate: class {
+    
   /// Returns whether the navigator should push the view controller or not. It returns `true` for
   /// default.
   func shouldPush(viewController: UIViewController, from: UINavigationControllerType) -> Bool
@@ -9,6 +10,8 @@ public protocol NavigatorDelegate: class {
   /// Returns whether the navigator should present the view controller or not. It returns `true`
   /// for default.
   func shouldPresent(viewController: UIViewController, from: UIViewControllerType) -> Bool
+    
+  func present(viewModel: ViewModel, url: URLConvertible, context: Any?) -> Bool
 }
 
 extension NavigatorDelegate {

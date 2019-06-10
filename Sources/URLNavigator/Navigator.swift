@@ -5,37 +5,42 @@ import UIKit
 import URLMatcher
 #endif
 
-open class Navigator: NavigatorType {
+open class Navigator<T: ViewModel> /*: NavigatorType*/ {
   public let matcher = URLMatcher()
   open weak var delegate: NavigatorDelegate?
 
-  private var viewControllerFactories = [URLPattern: ViewControllerFactory]()
-  private var handlerFactories = [URLPattern: URLOpenHandlerFactory]()
+  private var viewModelFactories = [URLPattern: ViewModelFactory<T>]()
+  private var handlerFactories = [URLPattern: URLOpenHandlerFactory<T>]()
 
   public init() {
     // ⛵ I'm a Navigator!
   }
 
-  open func register(_ pattern: URLPattern, _ factory: @escaping ViewControllerFactory) {
-    self.viewControllerFactories[pattern] = factory
-  }
-
-  open func handle(_ pattern: URLPattern, _ factory: @escaping URLOpenHandlerFactory) {
-    self.handlerFactories[pattern] = factory
-  }
-
-  open func viewController(for url: URLConvertible, context: Any? = nil) -> UIViewController? {
-    let urlPatterns = Array(self.viewControllerFactories.keys)
-    guard let match = self.matcher.match(url, from: urlPatterns) else { return nil }
-    guard let factory = self.viewControllerFactories[match.pattern] else { return nil }
-    return factory(url, match.values, context)
+  open func addRoute(_ pattern: URLPattern, _ viewModelFactory: @escaping ViewModelFactory<T>, handlerFactory: URLOpenHandlerFactory<T>? = nil) {
+    self.viewModelFactories[pattern] = viewModelFactory
+    self.handlerFactories[pattern] = handlerFactory
   }
 
   open func handler(for url: URLConvertible, context: Any?) -> URLOpenHandler? {
-    let urlPatterns = Array(self.handlerFactories.keys)
+    let urlPatterns = Array(self.viewModelFactories.keys)
     guard let match = self.matcher.match(url, from: urlPatterns) else { return nil }
-    guard let handler = self.handlerFactories[match.pattern] else { return nil }
-    return { handler(url, match.values, context) }
+    guard let viewModelFactory = self.viewModelFactories[match.pattern] else { return nil }
+    guard let viewModel = viewModelFactory(url, match.values, context) else { return nil }
+    if let handlerFactory = self.handlerFactories[match.pattern] {
+        return { handlerFactory(viewModel, url, match.values, context) }
+    } else {
+        return {
+            return self.delegate?.present(viewModel: viewModel, url: url, context: context) ?? false
+        }
+    }
   }
+    
+    open func openURL(_ url: URLConvertible, context: Any?) -> Bool {
+        if let handle = handler(for: url, context: context) {
+            return handle()
+        }
+        return false
+    }
 }
+
 #endif
