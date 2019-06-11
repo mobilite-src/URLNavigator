@@ -11,6 +11,7 @@ open class Navigator<T: ViewModel> /*: NavigatorType*/ {
 
   private var viewModelFactories = [URLPattern: ViewModelFactory<T>]()
   private var handlerFactories = [URLPattern: URLOpenHandlerFactory<T>]()
+  private var insertionList = [URLPattern]()
 
   public init() {
     // ⛵ I'm a Navigator!
@@ -19,11 +20,11 @@ open class Navigator<T: ViewModel> /*: NavigatorType*/ {
   open func addRoute(_ pattern: URLPattern, _ viewModelFactory: @escaping ViewModelFactory<T>, handlerFactory: URLOpenHandlerFactory<T>? = nil) {
     self.viewModelFactories[pattern] = viewModelFactory
     self.handlerFactories[pattern] = handlerFactory
+    self.insertionList.append(pattern)
   }
 
   open func handler(for url: URLConvertible, context: Any?) -> URLOpenHandler? {
-    let urlPatterns = Array(self.viewModelFactories.keys)
-    guard let match = self.matcher.match(url, from: urlPatterns) else { return nil }
+    guard let match = self.matcher.match(url, from: insertionList) else { return nil }
     guard let viewModelFactory = self.viewModelFactories[match.pattern] else { return nil }
     guard let viewModel = viewModelFactory(url, match.values, context) else { return nil }
     if let handlerFactory = self.handlerFactories[match.pattern] {
