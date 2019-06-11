@@ -35,6 +35,13 @@ open class Navigator<T: ViewModel> /*: NavigatorType*/ {
     }
   }
     
+    open func getViewModel(_ url: URLConvertible, context: Any?) -> ViewModel? {
+        let urlPatterns = Array(self.viewModelFactories.keys)
+        guard let match = self.matcher.match(url, from: urlPatterns) else { return nil }
+        guard let viewModelFactory = self.viewModelFactories[match.pattern] else { return nil }
+        return viewModelFactory(url, match.values, context)
+    }
+    
     open func openURL(_ url: URLConvertible, context: Any?) -> Bool {
         if let handle = handler(for: url, context: context) {
             return handle()
