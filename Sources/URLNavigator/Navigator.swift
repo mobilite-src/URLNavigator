@@ -19,11 +19,11 @@ open class Navigator<T: ViewModel> /*: NavigatorType*/ {
   }
 
     open func addRoute(_ pattern: URLPattern, _ viewModelFactory: @escaping ViewModelFactory<T>, handlerFactory: @escaping URLOpenHandlerFactory<T>) {
-    self.addPattern(pattern: pattern, viewModelFactory, handlerFactory: handlerFactory, presentationMode: nil)
+    self.addPattern(pattern: pattern, viewModelFactory, handlerFactory: handlerFactory)
   }
     
     open func addRoute(_ pattern: URLPattern, presentationMode: PresentationMode, _ viewModelFactory: @escaping ViewModelFactory<T>) {
-        self.addPattern(pattern: pattern, viewModelFactory, handlerFactory: nil, presentationMode: presentationMode)
+        self.addPattern(pattern: pattern, viewModelFactory, presentationMode: presentationMode)
     }
     
     private func addPattern(pattern: URLPattern, _ viewModelFactory: @escaping ViewModelFactory<T>, handlerFactory: URLOpenHandlerFactory<T>? = nil, presentationMode: PresentationMode? = nil) {
