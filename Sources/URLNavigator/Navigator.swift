@@ -12,16 +12,26 @@ open class Navigator<T: ViewModel> /*: NavigatorType*/ {
   private var viewModelFactories = [URLPattern: ViewModelFactory<T>]()
   private var handlerFactories = [URLPattern: URLOpenHandlerFactory<T>]()
   private var insertionList = [URLPattern]()
+  private var presentationModes = [URLPattern: PresentationMode]()
 
   public init() {
     // ⛵ I'm a Navigator!
   }
 
-  open func addRoute(_ pattern: URLPattern, _ viewModelFactory: @escaping ViewModelFactory<T>, handlerFactory: URLOpenHandlerFactory<T>? = nil) {
-    self.viewModelFactories[pattern] = viewModelFactory
-    self.handlerFactories[pattern] = handlerFactory
-    self.insertionList.append(pattern)
+    open func addRoute(_ pattern: URLPattern, _ viewModelFactory: @escaping ViewModelFactory<T>, handlerFactory: @escaping URLOpenHandlerFactory<T>) {
+    self.addPattern(pattern: pattern, viewModelFactory, handlerFactory: handlerFactory, presentationMode: nil)
   }
+    
+    open func addRoute(_ pattern: URLPattern, presentationMode: PresentationMode, _ viewModelFactory: @escaping ViewModelFactory<T>) {
+        self.addPattern(pattern: pattern, viewModelFactory, handlerFactory: nil, presentationMode: presentationMode)
+    }
+    
+    private func addPattern(pattern: URLPattern, _ viewModelFactory: @escaping ViewModelFactory<T>, handlerFactory: URLOpenHandlerFactory<T>? = nil, presentationMode: PresentationMode? = nil) {
+        self.viewModelFactories[pattern] = viewModelFactory
+        self.handlerFactories[pattern] = handlerFactory
+        self.presentationModes[pattern] = presentationMode
+        self.insertionList.append(pattern)
+    }
 
   open func handler(for url: URLConvertible, context: Any?) -> URLOpenHandler? {
     guard let match = self.matcher.match(url, from: insertionList) else { return nil }
@@ -30,8 +40,9 @@ open class Navigator<T: ViewModel> /*: NavigatorType*/ {
     if let handlerFactory = self.handlerFactories[match.pattern] {
         return { handlerFactory(viewModel, url, match.values, context) }
     } else {
+        guard let presentationMode = self.presentationModes[match.pattern] else { return nil }
         return {
-            return self.delegate?.present(viewModel: viewModel, url: url, context: context) ?? false
+            return self.delegate?.routeToViewController(viewModel: viewModel, presentationMode: presentationMode, url: url, context: context) ?? false
         }
     }
   }

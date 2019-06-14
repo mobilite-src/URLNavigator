@@ -1,26 +1,14 @@
 #if os(iOS) || os(tvOS)
 import UIKit
 
-public protocol NavigatorDelegate: class {
-    
-  /// Returns whether the navigator should push the view controller or not. It returns `true` for
-  /// default.
-  func shouldPush(viewController: UIViewController, from: UINavigationControllerType) -> Bool
-
-  /// Returns whether the navigator should present the view controller or not. It returns `true`
-  /// for default.
-  func shouldPresent(viewController: UIViewController, from: UIViewControllerType) -> Bool
-    
-  func present(viewModel: ViewModel, url: URLConvertible, context: Any?) -> Bool
+public enum PresentationMode {
+    case push
+    case present
+    case replaceRootViewController
 }
 
-extension NavigatorDelegate {
-  public func shouldPush(viewController: UIViewController, from: UINavigationControllerType) -> Bool {
-    return true
-  }
-
-  public func shouldPresent(viewController: UIViewController, from: UIViewControllerType) -> Bool {
-    return true
-  }
+public protocol NavigatorDelegate: class {
+    
+    func routeToViewController(viewModel: ViewModel, presentationMode: PresentationMode, url: URLConvertible, context: Any?) -> Bool
 }
 #endif
